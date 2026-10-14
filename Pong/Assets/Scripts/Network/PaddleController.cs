@@ -1,0 +1,135 @@
+using System.Collections.Generic;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class PaddleController : NetworkBehaviour
+{
+    public static readonly List<PaddleController> All = new List<PaddleController>();
+    public static PaddleController Local;
+
+    public readonly SyncVar<int> Side = new SyncVar<int>(2);
+
+    [SerializeField] private float speed = 10f;
+
+    private void Awake()
+    {
+        Side.OnChange += OnSideChanged;
+    }
+
+    private void OnDestroy()
+    {
+        Side.OnChange -= OnSideChanged;
+    }
+
+    private void Update()
+    {
+        if (!IsOwner) return;
+
+        float move = 0f;
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) move += 1f;
+            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) move -= 1f;
+        }
+
+        float newZ = transform.position.z + (move * speed * Time.deltaTime);
+        transform.position = new Vector3(transform.position.x, transform.position.y, ClampZ(newZ));
+    }
+
+    private float ClampZ(float z)
+    {
+        float paddleHalfLength = transform.lossyScale.z / 2f;
+        float limit = Mathf.Max(0f, Court.HalfHeight - paddleHalfLength);
+        return Mathf.Clamp(z, -limit, limit);
+    }
+
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+
+        if (!All.Contains(this))
+            All.Add(this);
+
+        bool leftTaken = false;
+        bool rightTaken = false;
+
+        foreach (PaddleController paddle in All)
+        {
+            if (paddle == null || paddle == this)
+                continue;
+
+            if (paddle.Side.Value == 0)
+                leftTaken = true;
+            else if (paddle.Side.Value == 1)
+                rightTaken = true;
+        }
+
+        int firstFreeSide = !leftTaken ? 0 : !rightTaken ? 1 : 2;
+        Side.Value = firstFreeSide;
+    }
+
+    public override void OnStopServer()
+    {
+        base.OnStopServer();
+        All.Remove(this);
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
+        if (!All.Contains(this))
+            All.Add(this);
+
+        if (IsOwner)
+        {
+            Local = this;
+            Debug.Log($"I am client {OwnerId}, side {Side.Value}");
+        }
+
+        Place();
+    }
+
+    public override void OnStopClient()
+    {
+        base.OnStopClient();
+        All.Remove(this);
+    }
+
+    private void OnSideChanged(int prev, int next, bool asServer)
+    {
+        Place();
+    }
+
+    private void Place()
+    {
+        Vector3 position = transform.position;
+        if (Side.Value == 0)
+            position.x = -Court.PaddleX;
+        else if (Side.Value == 1)
+            position.x = Court.PaddleX;
+        position.z = ClampZ(position.z);
+        transform.position = position;
+
+        Renderer rend = GetComponent<Renderer>();
+        if (rend != null)
+        {
+            if (Side.Value == 0)
+            {
+                rend.enabled = true;
+                rend.material.color = Color.blue;
+            }
+            else if (Side.Value == 1)
+            {
+                rend.enabled = true;
+                rend.material.color = new Color(1f, 0.5f, 0f);
+            }
+            else
+            {
+                rend.enabled = false;
+            }
+        }
+    }
+}
