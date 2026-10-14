@@ -152,7 +152,7 @@ MonoBehaviour:
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
-    Scale: {x: 0.5, y: 2, z: 1}
+    Scale: {x: 0.5, y: 1, z: 1.5}
     IsValid: 1
   <IsNested>k__BackingField: 0
   WasActiveDuringEdit: 0
@@ -173,7 +173,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584095997928470160
+  _initializedTimestamp: -8584095993860180117
 --- !u!114 &132647076184392641
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -209,12 +209,12 @@ MonoBehaviour:
     X: 0
     Y: 0
     Z: 0
-  _synchronizeRotation: 1
+  _synchronizeRotation: 0
   _rotationSnapping:
     X: 0
     Y: 0
     Z: 0
-  _synchronizeScale: 1
+  _synchronizeScale: 0
   _scaleSensitivity: 0.001
   _scaleSnapping:
     X: 0
