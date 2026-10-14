@@ -23,7 +23,7 @@ public class GameState : NetworkBehaviour
 
     private void Start()
     {
-        panel = () => $"LEFT {LeftScore.Value} : {RightScore.Value} RIGHT\nServe: {(ServingSide.Value == 0 ? "LEFT" : "RIGHT")}";
+        panel = () => $"{LeftScore.Value} : {RightScore.Value}";
         ConnectionHud.Panels.Add(panel);
     }
 
