@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 7359227151958542705}
   - component: {fileID: 2614534366195973028}
   - component: {fileID: 4158909954532524375}
+  - component: {fileID: -4762985343738125289}
   m_Layer: 0
   m_Name: NetworkBall
   m_TagString: Untagged
@@ -217,3 +218,19 @@ MonoBehaviour:
     X: 0
     Y: 0
     Z: 0
+--- !u!114 &-4762985343738125289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8825824858284874505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 516965dc610db264db2c3960468b781c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkBall
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 2614534366195973028}
+  _networkObjectCache: {fileID: 0}
+  speed: 8
