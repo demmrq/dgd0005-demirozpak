@@ -52,6 +52,7 @@ public class PaddleController : NetworkBehaviour
         if (NetworkBall.Instance.InPlay.Value) return;
 
         NetworkBall.Instance.Serve(1 - Side.Value);
+        GameState.Announce($"{GameState.SideName(Side.Value)} served");
     }
 
     [ObserversRpc]
@@ -96,12 +97,16 @@ public class PaddleController : NetworkBehaviour
 
         int firstFreeSide = !leftTaken ? 0 : !rightTaken ? 1 : 2;
         Side.Value = firstFreeSide;
+
+        GameState.Announce($"Player {OwnerId} joined as {GameState.SideName(firstFreeSide)}");
     }
 
     public override void OnStopServer()
     {
         base.OnStopServer();
         All.Remove(this);
+
+        GameState.Announce($"Player {OwnerId} ({GameState.SideName(Side.Value)}) left");
     }
 
     public override void OnStartClient()

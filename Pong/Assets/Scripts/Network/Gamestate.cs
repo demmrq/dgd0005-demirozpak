@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using FishNet.Connection;
 using FishNet.Object;
@@ -7,19 +8,50 @@ public class GameState : NetworkBehaviour
 {
     public static GameState Instance;
 
+    public const int MaxFeedLines = 6;
+
     public readonly SyncVar<int> LeftScore = new SyncVar<int>(0);
     public readonly SyncVar<int> RightScore = new SyncVar<int>(0);
     public readonly SyncVar<int> ServingSide = new SyncVar<int>(0);
+    public readonly SyncList<string> Feed = new SyncList<string>();
 
     private GUIStyle scoreStyle;
+    private Func<string> feedPanel;
+
+    public static string SideName(int side)
+    {
+        if (side == 0) return "LEFT";
+        if (side == 1) return "RIGHT";
+        return "SPECTATOR";
+    }
+
+    public static void Announce(string line)
+    {
+        if (Instance == null) return;
+        if (!Instance.IsServerInitialized) return;
+        if (string.IsNullOrEmpty(line)) return;
+
+        Instance.Feed.Add(line);
+        while (Instance.Feed.Count > MaxFeedLines)
+            Instance.Feed.RemoveAt(0);
+    }
 
     private void Awake()
     {
         Instance = this;
     }
 
+    private void Start()
+    {
+        feedPanel = () => Feed.Count == 0 ? string.Empty : string.Join("\n", Feed);
+        ConnectionHud.Panels.Add(feedPanel);
+    }
+
     private void OnDestroy()
     {
+        if (feedPanel != null)
+            ConnectionHud.Panels.Remove(feedPanel);
+
         if (Instance == this)
             Instance = null;
     }
@@ -32,6 +64,8 @@ public class GameState : NetworkBehaviour
         else if (scorerSide == 1) RightScore.Value++;
 
         ServingSide.Value = 1 - scorerSide;
+
+        Announce($"{SideName(scorerSide)} scored! {LeftScore.Value}:{RightScore.Value}");
 
         PaddleController scorerPaddle = null;
         PaddleController concederPaddle = null;
