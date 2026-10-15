@@ -1,4 +1,5 @@
 using UnityEngine;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 
@@ -10,9 +11,6 @@ public class GameState : NetworkBehaviour
     public readonly SyncVar<int> RightScore = new SyncVar<int>(0);
     public readonly SyncVar<int> ServingSide = new SyncVar<int>(0);
 
-    private const float ServeDelay = 1.5f;
-
-    private float serveDelayTimer = ServeDelay;
     private GUIStyle scoreStyle;
 
     private void Awake()
@@ -26,33 +24,6 @@ public class GameState : NetworkBehaviour
             Instance = null;
     }
 
-    private void Update()
-    {
-        if (!IsServerInitialized) return;
-        if (NetworkBall.Instance == null) return;
-        if (NetworkBall.Instance.InPlay.Value) return;
-
-        int activePlayers = 0;
-        foreach (PaddleController p in PaddleController.All)
-        {
-            if (p != null && p.Side.Value <= 1) activePlayers++;
-        }
-
-        if (activePlayers >= 2)
-        {
-            serveDelayTimer -= Time.deltaTime;
-            if (serveDelayTimer <= 0f)
-            {
-                serveDelayTimer = ServeDelay;
-                NetworkBall.Instance.Serve(ServingSide.Value);
-            }
-        }
-        else
-        {
-            serveDelayTimer = ServeDelay;
-        }
-    }
-
     public void Goal(int scorerSide)
     {
         if (!IsServerInitialized) return;
@@ -61,7 +32,29 @@ public class GameState : NetworkBehaviour
         else if (scorerSide == 1) RightScore.Value++;
 
         ServingSide.Value = 1 - scorerSide;
-        serveDelayTimer = ServeDelay;
+
+        PaddleController scorerPaddle = null;
+        PaddleController concederPaddle = null;
+
+        foreach (PaddleController paddle in PaddleController.All)
+        {
+            if (paddle == null) continue;
+
+            if (paddle.Side.Value == scorerSide)
+                scorerPaddle = paddle;
+            else if (paddle.Side.Value == ServingSide.Value)
+                concederPaddle = paddle;
+        }
+
+        if (scorerPaddle != null)
+            scorerPaddle.AnnounceGoal(LeftScore.Value, RightScore.Value);
+
+        if (concederPaddle != null)
+        {
+            NetworkConnection owner = concederPaddle.Owner;
+            if (owner != null && owner.IsValid)
+                concederPaddle.YouServe(owner);
+        }
     }
 
     private void OnGUI()

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
@@ -27,6 +28,9 @@ public class PaddleController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+            RequestServe();
+
         float move = 0f;
         if (Keyboard.current != null)
         {
@@ -36,6 +40,30 @@ public class PaddleController : NetworkBehaviour
 
         float newZ = transform.position.z + (move * speed * Time.deltaTime);
         transform.position = new Vector3(transform.position.x, transform.position.y, ClampZ(newZ));
+    }
+
+    [ServerRpc]
+    private void RequestServe()
+    {
+        if (GameState.Instance == null) return;
+        if (NetworkBall.Instance == null) return;
+        if (Side.Value > 1) return;
+        if (Side.Value != GameState.Instance.ServingSide.Value) return;
+        if (NetworkBall.Instance.InPlay.Value) return;
+
+        NetworkBall.Instance.Serve(1 - Side.Value);
+    }
+
+    [ObserversRpc]
+    public void AnnounceGoal(int left, int right)
+    {
+        ConnectionHud.Flash($"Scored! {left}:{right}");
+    }
+
+    [TargetRpc]
+    public void YouServe(NetworkConnection target)
+    {
+        ConnectionHud.Flash("YOU SERVE");
     }
 
     private float ClampZ(float z)
