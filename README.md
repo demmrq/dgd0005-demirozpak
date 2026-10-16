@@ -4,7 +4,7 @@ Demir Özpak - 2400004554
 
 Each player owns one paddle. The ball has no client owner and only the server moves it. Everyone shares the score, whose serve it is and the last six events. A third client joins as a spectator.
 
-Unity 6000.0.32f1, FishNet 4.7.3R.
+Unity 6000.3.2f1, FishNet 4.7.3R.
 
 ## Run
 
