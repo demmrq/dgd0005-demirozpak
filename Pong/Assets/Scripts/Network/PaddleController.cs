@@ -17,6 +17,10 @@ public class PaddleController : NetworkBehaviour
     private const int Spectator = 2;
     private float _serverAxis;
 
+    private const double MinInputGap = 0.030;
+    private double _lastInputTime = -1;
+    public int RejectedInputs;
+
     private void Awake()
     {
         Side.OnChange += OnSideChanged;
@@ -74,6 +78,15 @@ public class PaddleController : NetworkBehaviour
         axis = Mathf.Clamp(axis, -1f, 1f);
         if (Side.Value == Spectator) return;
 
+        double now = TimeManager.TicksToTime(TimeManager.Tick);
+        if (_lastInputTime >= 0 && now - _lastInputTime < MinInputGap)
+        {
+            RejectedInputs++;
+            Debug.Log($"[Server] Rejected input from client {OwnerId}: too fast.");
+            return;
+        }
+        _lastInputTime = now;
+
         _serverAxis = axis;
     }
 
@@ -112,6 +125,8 @@ public class PaddleController : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
+
+        ConnectionHud.Panels.Add(() => $"Rejected inputs (paddle {OwnerId}): {RejectedInputs}");
 
         if (!All.Contains(this))
             All.Add(this);
