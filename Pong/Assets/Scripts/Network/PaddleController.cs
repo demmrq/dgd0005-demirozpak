@@ -34,9 +34,22 @@ public class PaddleController : NetworkBehaviour
     private void Update()
     {
         if (!IsOwner) return;
+        if (Keyboard.current == null) return;
 
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (Keyboard.current.spaceKey.wasPressedThisFrame)
             RequestServe();
+
+        if (Keyboard.current.cKey.wasPressedThisFrame)
+        {
+            for (int i = 0; i < 20; i++)
+                ServerSetAxis(1f);
+        }
+
+        if (Keyboard.current.xKey.wasPressedThisFrame)
+            ServerSetAxis(50f);
+
+        if (Keyboard.current.tKey.wasPressedThisFrame && NetworkBall.Instance != null)
+            transform.position = NetworkBall.Instance.transform.position;
     }
 
     public override void OnStartNetwork()
