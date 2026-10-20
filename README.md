@@ -13,3 +13,4 @@ Unity 6000.3.2f1, FishNet 4.7.3R, Multiplayer Play Mode 2.0.2.
 3. On the other computer, use the server's IPv4 address and Start Client (both on same hotspot, UDP 7770). Move with W/S or arrow keys, Space to serve.
 
 [Week 3 answers and tests](Week03/README.md)
+[Week 4 answers and tests](Week04/README.md)
