@@ -14,6 +14,9 @@ public class PaddleController : NetworkBehaviour
 
     [SerializeField] private float speed = 10f;
 
+    private const int Spectator = 2;
+    private float _serverAxis;
+
     private void Awake()
     {
         Side.OnChange += OnSideChanged;
@@ -30,17 +33,46 @@ public class PaddleController : NetworkBehaviour
 
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
             RequestServe();
+    }
 
-        float move = 0f;
-        if (Keyboard.current != null)
+    public override void OnStartNetwork()
+    {
+        base.OnStartNetwork();
+        TimeManager.OnTick += OnTick;
+    }
+
+    public override void OnStopNetwork()
+    {
+        base.OnStopNetwork();
+        TimeManager.OnTick -= OnTick;
+    }
+
+    private void OnTick()
+    {
+        if (IsOwner && Side.Value != Spectator)
         {
-            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) move += 1f;
-            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) move -= 1f;
+            float axis = 0f;
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) axis += 1f;
+                if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) axis -= 1f;
+            }
+            ServerSetAxis(axis);
         }
 
-        float newZ = transform.position.z + (move * speed * Time.deltaTime);
-        transform.position = new Vector3(transform.position.x, transform.position.y, ClampZ(newZ));
+        if (IsServerInitialized)
+        {
+            transform.position += Vector3.forward * _serverAxis * speed * (float)TimeManager.TickDelta;
+            Court.ClampPaddle(transform);
+        }
     }
+
+    [ServerRpc]
+    private void ServerSetAxis(float axis)
+    {
+        _serverAxis = axis;
+    }
+
 
     [ServerRpc]
     private void RequestServe()
